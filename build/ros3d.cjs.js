@@ -58776,7 +58776,7 @@ Viewer.prototype.draw = function draw (){
 
   // update the controls
   this.cameraControls.update();
-
+console.log("cjs.js")
   // put light to the top-left of the camera
   // BUG: position is a read-only property of DirectionalLight,
   // attempting to assign to it either does nothing or throws an error.
