@@ -55086,15 +55086,15 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
     // this.raycaster.setFromCamera(mousePos, this.camera);
     // this.raycaster.ray.intersectPlane(this.plane, this.intersectionpoint);
 
-    console.log(mouseRay);
-    console.log(this.camera);
-    console.log(this.plane);
+    // console.log(mouseRay);
+    // console.log(this.camera);
+    // console.log(this.plane);
 
     let planeorigin = new THREE.Vector3(0, 0, 0);
     let planenormal = new THREE.Vector3(0, 0, 1);
-    console.log(planeorigin, planenormal);
-    console.log(intersectPlane(mouseRay, planeorigin, planenormal));
-    this.intersectionpoint=intersectPlane(mouseRay, planeorigin, planenormal)
+    // console.log(planeorigin, planenormal);
+    // console.log(intersectPlane(mouseRay, planeorigin, planenormal));
+    this.intersectionpoint = intersectPlane(mouseRay, planeorigin, planenormal);
 
     let arrow_old;
     if (flagPosSet && this.dragging) {
@@ -55142,7 +55142,7 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
         domEvent.type === "touchend"
       ) {
         for (let i = 0; i < this.rootObject.children.length; i++) {
-          console.log(this.rootObject.children[i]);
+          // console.log(this.rootObject.children[i]);
           if (this.rootObject.children[i].name == "pose_arrow")
             this.rootObject.remove(this.rootObject.children[i]);
         }
@@ -55223,7 +55223,7 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
         let arrow_pos;
         let arrow_qut;
         for (let i = 0; i < this.rootObject.children.length; i++) {
-          console.log(this.rootObject.children[i]);
+          // console.log(this.rootObject.children[i]);
           arrow_pos = this.rootObject.children[i].position;
           arrow_qut = this.rootObject.children[i].quaternion;
           if (this.rootObject.children[i].name == "pose_arrow")
