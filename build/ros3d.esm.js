@@ -55087,12 +55087,14 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
     this.raycaster.ray.intersectPlane(this.plane, this.intersectionpoint);
 
     console.log(mouseRay);
-    
     console.log(this.camera);
-    console.log(this.camera.position);
-    var ray = new THREE.Raycaster();
-    ray.origin =this.camera.position
-    console.log(findClosestPoint(ray, mouseRay));
+    console.log(this.plane);
+
+    // console.log(this.camera.position);
+    // var ray = new THREE.Raycaster();
+    // ray.origin =this.camera.position
+    // ray.origin =this.camera.position
+    console.log(intersectPlane(mouseRay, this.plane.origin));
 
     const dir = new THREE.Vector3(
       this.intersectionpoint.x - this.start_pos.x,
@@ -55100,12 +55102,7 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
       0
     );
     dir.normalize();
-    let pos = findClosestPoint(this.camera.position, mouseRay)
-    const origin = new THREE.Vector3(
-      pos.x,
-      pos.y,
-      pos.z
-    );
+    const origin = new THREE.Vector3(pos.x, pos.y, pos.z);
     const length = 1.5;
     let hex = 0x00ff00;
     const headWidth = 0.5;
