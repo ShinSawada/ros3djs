@@ -1,5 +1,10 @@
 import * as ROSLIB from "roslib";
 
+let flagPosSet = false;
+let setArrowMode = "";
+let setPosition = {};
+let cameraPosition_old = undefined;
+
 // Polyfills
 
 if (Number.EPSILON === undefined) {
@@ -20038,10 +20043,7 @@ function WebGLUtils(gl, extensions) {
  */
 
 function WebGLRenderer(parameters) {
-  console.log("THREE.WebGLRenderer", REVISION);
-  console.log("esm.js");
-  console.log("esm.js");
-  console.log("esm.js");
+  // console.log("THREE.WebGLRenderer", REVISION);
 
   parameters = parameters || {};
 
@@ -52414,6 +52416,7 @@ var OccupancyGrid = /*@__PURE__*/ (function (superclass) {
   function OccupancyGrid(options) {
     options = options || {};
     var message = options.message;
+    var topicname = options.topicname;
     var opacity = options.opacity || 1.0;
     var color = options.color || { r: 255, g: 255, b: 255, a: 255 };
 
@@ -52480,7 +52483,12 @@ var OccupancyGrid = /*@__PURE__*/ (function (superclass) {
         var val = this.getValue(mapI, invRow, col, data);
 
         // determine the color
-        var color = this.getColor(mapI, invRow, col, val);
+        var color;
+        if (topicname == "/map") {
+          color = this.getMapColor(mapI, invRow, col, val);
+          // console.log(topicname);
+        } else color = this.getColor(mapI, invRow, col, val);
+        // var color = this.getColor(mapI, invRow, col, val);
 
         // determine the index into the image data array
         var i = (col + row * width) * 4;
@@ -52521,14 +52529,54 @@ var OccupancyGrid = /*@__PURE__*/ (function (superclass) {
    * @returns r,g,b,a array of values from 0 to 255 representing the color values for each channel
    */
   OccupancyGrid.prototype.getColor = function getColor(index, row, col, value) {
+    if (value < 50) {
+      return [
+        (value * this.color.r) / 255,
+        (value * this.color.g) / 255,
+        (value * this.color.b) / 255,
+        0,
+      ];
+    } else {
+      return [
+        (value * this.color.r) / 255,
+        (value * this.color.g) / 255,
+        (value * this.color.b) / 255,
+        255,
+      ];
+    }
+  };
+
+  /**
+   * Returns a color value given parameters of the position in the grid; the default implementation
+   * scales the default color value by the grid value. Subclasses can extend this functionality
+   * (e.g. lookup a color in a color map).
+   * @param {int} index the current index of the cell
+   * @param {int} row the row of the cell
+   * @param {int} col the column of the cell
+   * @param {float} value the value of the cell
+   * @returns r,g,b,a array of values from 0 to 255 representing the color values for each channel
+   */
+  OccupancyGrid.prototype.getMapColor = function getMapColor(
+    index,
+    row,
+    col,
+    value
+  ) {
+    var val_trans = value;
+    if (value === 100) {
+      val_trans = 0;
+    } else if (value === 0) {
+      val_trans = 255;
+    } else {
+      val_trans = 127;
+    }
     return [
-      (value * this.color.r) / 255,
-      (value * this.color.g) / 255,
-      (value * this.color.b) / 255,
+      (val_trans * this.color.r) / 255,
+      (val_trans * this.color.g) / 255,
+      (val_trans * this.color.b) / 255,
       255,
     ];
   };
-
   return OccupancyGrid;
 })(THREE.Mesh);
 
@@ -52600,6 +52648,7 @@ var OccupancyGridClient = /*@__PURE__*/ (function (EventEmitter2) {
     }
 
     var newGrid = new OccupancyGrid({
+      topicname: this.topicName,
       message: message,
       color: this.color,
       opacity: this.opacity,
@@ -54938,6 +54987,8 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
     this.fallbackTarget = options.fallbackTarget;
     this.lastTarget = this.fallbackTarget;
     this.dragging = false;
+    this.scene = options.scene;
+    this.ros = options.ros;
 
     // listen to DOM events
     var eventNames = [
@@ -54957,6 +55008,23 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
       "touchmove",
     ];
     this.listeners = {};
+
+    this.set_inipose = new ROSLIB.Topic({
+      ros: this.ros,
+      name: "/initialpose",
+      messageType: "geometry_msgs/PoseWithCovarianceStamped",
+    });
+    this.actionClient = new ROSLIB.ActionClient({
+      ros: this.ros,
+      serverName: "/move_base",
+      actionName: "move_base_msgs/MoveBaseAction",
+    });
+
+    this.planenormal = new THREE.Vector3();
+    this.intersectionpoint = new THREE.Vector3();
+    this.plane = new THREE.Plane();
+    this.raycaster = new THREE.Raycaster();
+    this.start_pos = new THREE.Vector3();
 
     // add event listeners for the associated mouse events
     eventNames.forEach(function (eventName) {
@@ -55009,6 +55077,172 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
     mouseRaycaster.linePrecision = 0.001;
     mouseRaycaster.setFromCamera(mousePos, this.camera);
     var mouseRay = mouseRaycaster.ray;
+
+    this.planenormal.copy(this.camera.position).normalize();
+    this.plane.setFromNormalAndCoplanarPoint(
+      this.planenormal,
+      this.scene.position
+    );
+    this.raycaster.setFromCamera(mousePos, this.camera);
+    this.raycaster.ray.intersectPlane(this.plane, this.intersectionpoint);
+
+    let arrow_old;
+    if (flagPosSet && this.dragging) {
+      for (let i = 0; i < this.rootObject.children.length; i++) {
+        // console.log(this.rootObject.children[i]);
+        arrow_old =
+          this.rootObject.children[this.rootObject.children.length - 1];
+        if (this.rootObject.children[i].name == "pose_arrow")
+          this.rootObject.remove(this.rootObject.children[i]);
+      }
+
+      const dir = new THREE.Vector3(
+        this.intersectionpoint.x - this.start_pos.x,
+        this.intersectionpoint.y - this.start_pos.y,
+        0
+      );
+      dir.normalize();
+      const origin = new THREE.Vector3(
+        this.start_pos.x,
+        this.start_pos.y,
+        this.start_pos.z
+      );
+      const length = 1.5;
+      let hex = 0x00ff00;
+      if (setArrowMode == "goal") hex = 0xff00ff;
+      const headWidth = 0.5;
+      const arrowHelper = new THREE.ArrowHelper(
+        dir,
+        origin,
+        length,
+        hex,
+        headWidth
+      );
+      arrowHelper.name = "pose_arrow";
+      arrowHelper.line.material.linewidth = 5.0;
+      this.rootObject.add(arrowHelper);
+    } else {
+      this.start_pos = JSON.parse(JSON.stringify(this.intersectionpoint));
+    }
+
+    if (flagPosSet) {
+      if (
+        (domEvent.type === "mouseup" && domEvent.button === 2) ||
+        domEvent.type === "click" ||
+        domEvent.type === "touchend"
+      ) {
+        for (let i = 0; i < this.rootObject.children.length; i++) {
+          console.log(this.rootObject.children[i]);
+          if (this.rootObject.children[i].name == "pose_arrow")
+            this.rootObject.remove(this.rootObject.children[i]);
+        }
+        this.rootObject.add(arrow_old);
+        // console.log(this.rootObject.children);
+        setPosition = {
+          position: this.rootObject.children[0].position,
+          quaternion: this.rootObject.children[0].quaternion,
+        };
+
+        var positionVec3 = new ROSLIB.Vector3({
+          x: this.rootObject.children[0].position.x,
+          y: this.rootObject.children[0].position.y,
+          z: 0.0,
+        });
+
+        var orientation = new ROSLIB.Quaternion({
+          x: this.rootObject.children[0].quaternion.x,
+          y: this.rootObject.children[0].quaternion.y,
+          z: this.rootObject.children[0].quaternion.z,
+          w: this.rootObject.children[0].quaternion.w,
+        });
+
+        // console.log(orientation);
+        var q1 = new ROSLIB.Quaternion({
+          x: 0.0,
+          y: 0.0,
+          z: 1.0,
+          w: 1.0,
+        });
+        orientation.multiply(q1);
+        // console.log(orientation);
+
+        if (setArrowMode == "goal") {
+          var goal_pose = new ROSLIB.Pose({
+            position: positionVec3,
+            orientation: orientation,
+          });
+
+          var goal = new ROSLIB.Goal({
+            actionClient: this.actionClient,
+            goalMessage: {
+              target_pose: {
+                header: {
+                  frame_id: "map",
+                },
+                pose: goal_pose,
+              },
+            },
+          });
+
+          goal.send();
+        } else {
+          var ini_pose = new ROSLIB.Message({
+            header: {
+              frame_id: "map",
+            },
+            pose: {
+              pose: {
+                position: positionVec3,
+                orientation: orientation,
+              },
+              covariance: [
+                0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.06853892326654787,
+              ],
+            },
+          });
+          // console.log(setPosition);
+          for (let i = 0; i < 3; i++) {
+            this.set_inipose.publish(ini_pose);
+          }
+        }
+
+        flagPosSet = false;
+        let arrow_pos;
+        let arrow_qut;
+        for (let i = 0; i < this.rootObject.children.length; i++) {
+          console.log(this.rootObject.children[i]);
+          arrow_pos = this.rootObject.children[i].position;
+          arrow_qut = this.rootObject.children[i].quaternion;
+          if (this.rootObject.children[i].name == "pose_arrow")
+            this.rootObject.remove(this.rootObject.children[i]);
+        }
+        var rotation = new THREE.Euler().setFromQuaternion(arrow_qut);
+        const dir = new THREE.Vector3(
+          Math.cos(rotation._z + 0.5 * Math.PI),
+          Math.sin(rotation._z + 0.5 * Math.PI),
+          0
+        );
+        dir.normalize();
+        const origin = new THREE.Vector3(arrow_pos.x, arrow_pos.y, 0.12);
+        const length = 1.5;
+        let hex = 0x00ff00;
+        if (setArrowMode == "goal") hex = 0xff00ff;
+        const headWidth = 0.5;
+        const arrowHelper = new THREE.ArrowHelper(
+          dir,
+          origin,
+          length,
+          hex,
+          headWidth
+        );
+        arrowHelper.name = "pose_arrow";
+        arrowHelper.line.material.linewidth = 5.0;
+        this.rootObject.add(arrowHelper);
+      }
+    }
 
     // make our 3d mouse event
     var event3D = {
@@ -55246,6 +55480,8 @@ var OrbitControls = /*@__PURE__*/ (function (superclass) {
       var event = event3D.domEvent;
       event.preventDefault();
 
+      if (flagPosSet) return;
+
       switch (event.button) {
         case 0:
           state = STATE.ROTATE;
@@ -55282,6 +55518,9 @@ var OrbitControls = /*@__PURE__*/ (function (superclass) {
      */
     function onMouseMove(event3D) {
       var event = event3D.domEvent;
+
+      if (flagPosSet) return;
+
       if (state === STATE.ROTATE) {
         rotateEnd.set(event.clientX, event.clientY);
         rotateDelta.subVectors(rotateEnd, rotateStart);
@@ -55369,6 +55608,7 @@ var OrbitControls = /*@__PURE__*/ (function (superclass) {
      * @param event3D - the 3D event to handle
      */
     function onMouseUp(event3D) {
+      if (flagPosSet) return;
       if (!that.userRotate) {
         return;
       }
@@ -55382,6 +55622,7 @@ var OrbitControls = /*@__PURE__*/ (function (superclass) {
      * @param event3D - the 3D event to handle
      */
     function onMouseWheel(event3D) {
+      if (flagPosSet) return;
       if (!that.userZoom) {
         return;
       }
@@ -55410,6 +55651,7 @@ var OrbitControls = /*@__PURE__*/ (function (superclass) {
      */
     function onTouchDown(event3D) {
       var event = event3D.domEvent;
+      if (flagPosSet) return;
       switch (event.touches.length) {
         case 1:
           state = STATE.ROTATE;
@@ -55456,6 +55698,9 @@ var OrbitControls = /*@__PURE__*/ (function (superclass) {
      */
     function onTouchMove(event3D) {
       var event = event3D.domEvent;
+
+      if (flagPosSet) return;
+
       if (state === STATE.ROTATE) {
         rotateEnd.set(
           event.touches[0].pageX - window.scrollX,
@@ -55552,6 +55797,9 @@ var OrbitControls = /*@__PURE__*/ (function (superclass) {
 
     function onTouchEnd(event3D) {
       var event = event3D.domEvent;
+
+      if (flagPosSet) return;
+
       if (event.touches.length === 1 && state !== STATE.ROTATE) {
         state = STATE.ROTATE;
         rotateStart.set(
@@ -55742,10 +55990,11 @@ var Viewer = function Viewer(options) {
   var near = options.near || 0.01;
   var far = options.far || 1000;
   var alpha = options.alpha || 1.0;
+  var pixelratio = options.pixelratio || 10;
   var cameraPosition = options.cameraPose || {
     x: 3,
     y: 3,
-    z: 3,
+    z: 30,
   };
   var cameraZoomSpeed = options.cameraZoomSpeed || 0.5;
   var displayPanAndZoomFrame =
@@ -55754,6 +56003,7 @@ var Viewer = function Viewer(options) {
       : !!options.displayPanAndZoomFrame;
   var lineTypePanAndZoomFrame = options.lineTypePanAndZoomFrame || "full";
 
+  const ros = options.ros;
   // create the canvas to render to
   this.renderer = new THREE.WebGLRenderer({
     antialias: antialias,
@@ -55767,15 +56017,22 @@ var Viewer = function Viewer(options) {
   this.renderer.setSize(width, height);
   this.renderer.shadowMap.enabled = false;
   this.renderer.autoClear = false;
+  this.renderer.setPixelRatio(pixelratio);
 
   // create the global scene
   this.scene = new THREE.Scene();
 
   // create the global camera
   this.camera = new THREE.PerspectiveCamera(40, width / height, near, far);
-  this.camera.position.x = cameraPosition.x;
-  this.camera.position.y = cameraPosition.y;
-  this.camera.position.z = cameraPosition.z;
+  if (cameraPosition_old != undefined) {
+    this.camera.position.x = cameraPosition_old.position.x;
+    this.camera.position.y = cameraPosition_old.position.y;
+    this.camera.position.z = cameraPosition_old.position.z;
+  } else {
+    this.camera.position.x = cameraPosition.x;
+    this.camera.position.y = cameraPosition.y;
+    this.camera.position.z = cameraPosition.z;
+  }
   // add controls to the camera
   this.cameraControls = new OrbitControls({
     scene: this.scene,
@@ -55798,6 +56055,8 @@ var Viewer = function Viewer(options) {
     camera: this.camera,
     rootObject: this.selectableObjects,
     fallbackTarget: this.cameraControls,
+    scene: this.scene,
+    ros: ros,
   });
 
   // highlights the receiver of mouse events
@@ -55832,7 +56091,8 @@ Viewer.prototype.draw = function draw() {
   }
 
   // update the controls
-  this.cameraControls.update();
+  // this.cameraControls.update();
+  if (!flagPosSet) this.cameraControls.update();
 
   // put light to the top-left of the camera
   // BUG: position is a read-only property of DirectionalLight,
@@ -55847,6 +56107,11 @@ Viewer.prototype.draw = function draw() {
 
   // draw the frame
   this.animationRequestId = requestAnimationFrame(this.draw.bind(this));
+
+  cameraPosition_old = {
+    position: this.camera.position,
+    quaternion: this.camera.quaternion,
+  };
 };
 /**
  *Stop the render loop
@@ -55871,6 +56136,20 @@ Viewer.prototype.addObject = function addObject(object, selectable) {
     this.scene.add(object);
   }
 };
+
+Viewer.prototype.addObject = function removeObject(object_name) {
+  for (let i = 0; i < this.scene.children.length; i++) {
+    if (this.scene.children[i].geometry?.name == object_name) {
+      this.scene.remove(this.scene.children[i]);
+    }
+  }
+};
+
+Viewer.prototype.addObject = function setPose(flag, mode) {
+  flagPosSet = flag;
+  setArrowMode = mode;
+};
+
 /**
  * Resize 3D viewer
  *

@@ -19631,7 +19631,6 @@ var ROS3D = (function (exports, ROSLIB) {
 
   function WebGLRenderer(parameters) {
     console.log("THREE.WebGLRenderer", REVISION);
-    console.log("test-3d");
 
     parameters = parameters || {};
 
