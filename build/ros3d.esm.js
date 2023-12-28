@@ -55098,7 +55098,7 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
       0
     );
     dir.normalize();
-    const origin = new THREE.Vector3(pos.x, pos.y, pos.z);
+    const origin = new THREE.Vector3(this.intersectionpoint.x, this.intersectionpoint.y,this.intersectionpoint.z);
     const length = 1.5;
     let hex = 0x00ff00;
     const headWidth = 0.5;
