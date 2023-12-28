@@ -55090,11 +55090,7 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
     console.log(this.camera);
     console.log(this.plane);
 
-    // console.log(this.camera.position);
-    // var ray = new THREE.Raycaster();
-    // ray.origin =this.camera.position
-    // ray.origin =this.camera.position
-    console.log(intersectPlane(mouseRay, this.plane.origin));
+    // console.log(intersectPlane(mouseRay, this.plane.origin));
 
     const dir = new THREE.Vector3(
       this.intersectionpoint.x - this.start_pos.x,
