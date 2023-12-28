@@ -56146,7 +56146,7 @@ Viewer.prototype.removeObject = function removeObject(object_name) {
 };
 
 Viewer.prototype.setPose = function setPose(flag, mode) {
-  console.log("test12");
+  console.log("test1234");
   flagPosSet = flag;
   setArrowMode = mode;
 };
