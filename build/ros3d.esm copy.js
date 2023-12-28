@@ -55078,13 +55078,13 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
     mouseRaycaster.setFromCamera(mousePos, this.camera);
     var mouseRay = mouseRaycaster.ray;
 
-    // this.planenormal.copy(this.camera.position).normalize();
-    // this.plane.setFromNormalAndCoplanarPoint(
-    //   this.planenormal,
-    //   this.scene.position
-    // );
-    // this.raycaster.setFromCamera(mousePos, this.camera);
-    // this.raycaster.ray.intersectPlane(this.plane, this.intersectionpoint);
+    this.planenormal.copy(this.camera.position).normalize();
+    this.plane.setFromNormalAndCoplanarPoint(
+      this.planenormal,
+      this.scene.position
+    );
+    this.raycaster.setFromCamera(mousePos, this.camera);
+    this.raycaster.ray.intersectPlane(this.plane, this.intersectionpoint);
 
     console.log(mouseRay);
     console.log(this.camera);
@@ -55094,7 +55094,29 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
     let planenormal = new THREE.Vector3(0, 0, 1);
     console.log(planeorigin, planenormal);
     console.log(intersectPlane(mouseRay, planeorigin, planenormal));
-    this.intersectionpoint=intersectPlane(mouseRay, planeorigin, planenormal)
+
+    const dir = new THREE.Vector3(
+      this.intersectionpoint.x - this.start_pos.x,
+      this.intersectionpoint.y - this.start_pos.y,
+      0
+    );
+    dir.normalize();
+
+    let pos = intersectPlane(mouseRay, planeorigin, planenormal);
+    const origin = new THREE.Vector3(pos.x, pos.y, pos.z);
+    const length = 1.5;
+    let hex = 0x00ff00;
+    const headWidth = 0.5;
+    const arrowHelper = new THREE.ArrowHelper(
+      dir,
+      origin,
+      length,
+      hex,
+      headWidth
+    );
+    arrowHelper.name = "pose_arrow";
+    arrowHelper.line.material.linewidth = 5.0;
+    this.rootObject.add(arrowHelper);
 
     let arrow_old;
     if (flagPosSet && this.dragging) {
