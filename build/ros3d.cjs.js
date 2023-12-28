@@ -21243,6 +21243,7 @@ function WebGLUtils( gl, extensions ) {
 function WebGLRenderer( parameters ) {
 
 	console.log( 'THREE.WebGLRenderer', REVISION );
+
 	parameters = parameters || {};
 
 	var _canvas = parameters.canvas !== undefined ? parameters.canvas : document.createElementNS( 'http://www.w3.org/1999/xhtml', 'canvas' ),
@@ -58691,20 +58692,26 @@ var Viewer = function Viewer(options) {
   var far = options.far || 1000;
   var alpha = options.alpha || 1.0;
   var cameraPosition = options.cameraPose || {
-    x : 3,
-    y : 3,
-    z : 3
+    x: 3,
+    y: 3,
+    z: 3,
   };
   var cameraZoomSpeed = options.cameraZoomSpeed || 0.5;
-  var displayPanAndZoomFrame = (options.displayPanAndZoomFrame === undefined) ? true : !!options.displayPanAndZoomFrame;
+  var displayPanAndZoomFrame =
+    options.displayPanAndZoomFrame === undefined
+      ? true
+      : !!options.displayPanAndZoomFrame;
   var lineTypePanAndZoomFrame = options.lineTypePanAndZoomFrame || 'full';
 
   // create the canvas to render to
   this.renderer = new THREE.WebGLRenderer({
-    antialias : antialias,
-    alpha: true
+    antialias: antialias,
+    alpha: true,
   });
-  this.renderer.setClearColor(parseInt(background.replace('#', '0x'), 16), alpha);
+  this.renderer.setClearColor(
+    parseInt(background.replace('#', '0x'), 16),
+    alpha
+  );
   this.renderer.sortObjects = false;
   this.renderer.setSize(width, height);
   this.renderer.shadowMap.enabled = false;
@@ -58720,10 +58727,10 @@ var Viewer = function Viewer(options) {
   this.camera.position.z = cameraPosition.z;
   // add controls to the camera
   this.cameraControls = new OrbitControls({
-    scene : this.scene,
-    camera : this.camera,
-    displayPanAndZoomFrame : displayPanAndZoomFrame,
-    lineTypePanAndZoomFrame: lineTypePanAndZoomFrame
+    scene: this.scene,
+    camera: this.camera,
+    displayPanAndZoomFrame: displayPanAndZoomFrame,
+    lineTypePanAndZoomFrame: lineTypePanAndZoomFrame,
   });
   this.cameraControls.userZoomSpeed = cameraZoomSpeed;
 
@@ -58736,15 +58743,15 @@ var Viewer = function Viewer(options) {
   this.selectableObjects = new THREE.Group();
   this.scene.add(this.selectableObjects);
   var mouseHandler = new MouseHandler({
-    renderer : this.renderer,
-    camera : this.camera,
-    rootObject : this.selectableObjects,
-    fallbackTarget : this.cameraControls
+    renderer: this.renderer,
+    camera: this.camera,
+    rootObject: this.selectableObjects,
+    fallbackTarget: this.cameraControls,
   });
 
   // highlights the receiver of mouse events
   this.highlighter = new Highlighter({
-    mouseHandler : mouseHandler
+    mouseHandler: mouseHandler,
   });
 
   this.stopped = true;
@@ -58760,22 +58767,22 @@ var Viewer = function Viewer(options) {
 /**
  *Start the render loop
  */
-Viewer.prototype.start = function start (){
+Viewer.prototype.start = function start () {
   this.stopped = false;
   this.draw();
 };
 /**
  * Renders the associated scene to the viewer.
  */
-Viewer.prototype.draw = function draw (){
-  if(this.stopped){
+Viewer.prototype.draw = function draw () {
+  if (this.stopped) {
     // Do nothing if stopped
     return;
   }
 
   // update the controls
   this.cameraControls.update();
-console.log("cjs.js")
+
   // put light to the top-left of the camera
   // BUG: position is a read-only property of DirectionalLight,
   // attempting to assign to it either does nothing or throws an error.
@@ -58793,8 +58800,8 @@ console.log("cjs.js")
 /**
  *Stop the render loop
  */
-Viewer.prototype.stop = function stop (){
-  if(!this.stopped){
+Viewer.prototype.stop = function stop () {
+  if (!this.stopped) {
     // Stop animation render loop
     cancelAnimationFrame(this.animationRequestId);
   }
@@ -58823,6 +58830,17 @@ Viewer.prototype.resize = function resize (width, height) {
   this.camera.aspect = width / height;
   this.camera.updateProjectionMatrix();
   this.renderer.setSize(width, height);
+};
+Viewer.prototype.removeObject = function removeObject (object_name) {
+  for (var i = 0; i < this.scene.children.length; i++) {
+    if (this.scene.children[i].geometry.name === object_name) {
+      this.scene.remove(this.scene.children[i]);
+    }
+  }
+};
+Viewer.prototype.setPose = function setPose (flag, mode) {
+  // flagPosSet = flag;
+  // setArrowMode = mode;
 };
 
 exports.Arrow = Arrow;

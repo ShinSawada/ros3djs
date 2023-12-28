@@ -26,7 +26,7 @@
  *  *                           panning/zooming. Only has effect when
  *  *                           displayPanAndZoomFrame is set to true.
  */
-ROS3D.Viewer = function(options) {
+ROS3D.Viewer = function (options) {
   options = options || {};
   var divID = options.divID;
   var elem = options.elem;
@@ -39,20 +39,26 @@ ROS3D.Viewer = function(options) {
   var far = options.far || 1000;
   var alpha = options.alpha || 1.0;
   var cameraPosition = options.cameraPose || {
-    x : 3,
-    y : 3,
-    z : 3
+    x: 3,
+    y: 3,
+    z: 3,
   };
   var cameraZoomSpeed = options.cameraZoomSpeed || 0.5;
-  var displayPanAndZoomFrame = (options.displayPanAndZoomFrame === undefined) ? true : !!options.displayPanAndZoomFrame;
+  var displayPanAndZoomFrame =
+    options.displayPanAndZoomFrame === undefined
+      ? true
+      : !!options.displayPanAndZoomFrame;
   var lineTypePanAndZoomFrame = options.lineTypePanAndZoomFrame || 'full';
 
   // create the canvas to render to
   this.renderer = new THREE.WebGLRenderer({
-    antialias : antialias,
-    alpha: true
+    antialias: antialias,
+    alpha: true,
   });
-  this.renderer.setClearColor(parseInt(background.replace('#', '0x'), 16), alpha);
+  this.renderer.setClearColor(
+    parseInt(background.replace('#', '0x'), 16),
+    alpha
+  );
   this.renderer.sortObjects = false;
   this.renderer.setSize(width, height);
   this.renderer.shadowMap.enabled = false;
@@ -68,10 +74,10 @@ ROS3D.Viewer = function(options) {
   this.camera.position.z = cameraPosition.z;
   // add controls to the camera
   this.cameraControls = new ROS3D.OrbitControls({
-    scene : this.scene,
-    camera : this.camera,
-    displayPanAndZoomFrame : displayPanAndZoomFrame,
-    lineTypePanAndZoomFrame: lineTypePanAndZoomFrame
+    scene: this.scene,
+    camera: this.camera,
+    displayPanAndZoomFrame: displayPanAndZoomFrame,
+    lineTypePanAndZoomFrame: lineTypePanAndZoomFrame,
   });
   this.cameraControls.userZoomSpeed = cameraZoomSpeed;
 
@@ -84,15 +90,15 @@ ROS3D.Viewer = function(options) {
   this.selectableObjects = new THREE.Group();
   this.scene.add(this.selectableObjects);
   var mouseHandler = new ROS3D.MouseHandler({
-    renderer : this.renderer,
-    camera : this.camera,
-    rootObject : this.selectableObjects,
-    fallbackTarget : this.cameraControls
+    renderer: this.renderer,
+    camera: this.camera,
+    rootObject: this.selectableObjects,
+    fallbackTarget: this.cameraControls,
   });
 
   // highlights the receiver of mouse events
   this.highlighter = new ROS3D.Highlighter({
-    mouseHandler : mouseHandler
+    mouseHandler: mouseHandler,
   });
 
   this.stopped = true;
@@ -109,7 +115,7 @@ ROS3D.Viewer = function(options) {
 /**
  *  Start the render loop
  */
-ROS3D.Viewer.prototype.start = function(){
+ROS3D.Viewer.prototype.start = function () {
   this.stopped = false;
   this.draw();
 };
@@ -117,8 +123,8 @@ ROS3D.Viewer.prototype.start = function(){
 /**
  * Renders the associated scene to the viewer.
  */
-ROS3D.Viewer.prototype.draw = function(){
-  if(this.stopped){
+ROS3D.Viewer.prototype.draw = function () {
+  if (this.stopped) {
     // Do nothing if stopped
     return;
   }
@@ -144,8 +150,8 @@ ROS3D.Viewer.prototype.draw = function(){
 /**
  *  Stop the render loop
  */
-ROS3D.Viewer.prototype.stop = function(){
-  if(!this.stopped){
+ROS3D.Viewer.prototype.stop = function () {
+  if (!this.stopped) {
     // Stop animation render loop
     cancelAnimationFrame(this.animationRequestId);
   }
@@ -158,7 +164,7 @@ ROS3D.Viewer.prototype.stop = function(){
  * @param object - the THREE Object3D to add
  * @param selectable (optional) - if the object should be added to the selectable list
  */
-ROS3D.Viewer.prototype.addObject = function(object, selectable) {
+ROS3D.Viewer.prototype.addObject = function (object, selectable) {
   if (selectable) {
     this.selectableObjects.add(object);
   } else {
@@ -172,8 +178,21 @@ ROS3D.Viewer.prototype.addObject = function(object, selectable) {
  * @param width - new width value
  * @param height - new height value
  */
-ROS3D.Viewer.prototype.resize = function(width, height) {
+ROS3D.Viewer.prototype.resize = function (width, height) {
   this.camera.aspect = width / height;
   this.camera.updateProjectionMatrix();
   this.renderer.setSize(width, height);
+};
+
+ROS3D.Viewer.prototype.removeObject = function(object_name) {
+  for (let i = 0; i < this.scene.children.length; i++) {
+    if (this.scene.children[i].geometry.name === object_name) {
+      this.scene.remove(this.scene.children[i]);
+    }
+  }
+};
+
+ROS3D.Viewer.prototype.setPose = function(flag, mode) {
+  // flagPosSet = flag;
+  // setArrowMode = mode;
 };
