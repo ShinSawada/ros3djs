@@ -20040,6 +20040,8 @@ function WebGLUtils(gl, extensions) {
 function WebGLRenderer(parameters) {
   console.log("THREE.WebGLRenderer", REVISION);
   console.log("esm.js");
+  console.log("esm.js");
+  console.log("esm.js");
 
   parameters = parameters || {};
 
