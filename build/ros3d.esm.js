@@ -55086,6 +55086,7 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
     this.raycaster.setFromCamera(mousePos, this.camera);
     this.raycaster.ray.intersectPlane(this.plane, this.intersectionpoint);
 
+	console.log(findClosestPoint(this.camera,mouseRay))
     let arrow_old;
     if (flagPosSet && this.dragging) {
       for (let i = 0; i < this.rootObject.children.length; i++) {
@@ -55226,7 +55227,8 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
           0
         );
         dir.normalize();
-        const origin = new THREE.Vector3(arrow_pos.x, arrow_pos.y, 0.12);
+        // const origin = new THREE.Vector3(arrow_pos.x, arrow_pos.y, 0.12);
+        const origin = new THREE.Vector3(arrow_pos.x, arrow_pos.y, arrow_pos.z);
         const length = 1.5;
         let hex = 0x00ff00;
         if (setArrowMode == "goal") hex = 0xff00ff;
@@ -56146,7 +56148,6 @@ Viewer.prototype.removeObject = function removeObject(object_name) {
 };
 
 Viewer.prototype.setPose = function setPose(flag, mode) {
-  console.log("test1234");
   flagPosSet = flag;
   setArrowMode = mode;
 };
