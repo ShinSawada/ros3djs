@@ -58815,6 +58815,7 @@ Viewer.prototype.removeObject = function removeObject (object_name) {
   }
 };
 Viewer.prototype.setPose = function setPose (flag, mode) {
+  console.log('test');
   // flagPosSet = flag;
   // setArrowMode = mode;
 };

@@ -59389,6 +59389,7 @@ var ROS3D = (function (exports, ROSLIB) {
 	  };
 
 	  setPose(flag, mode) {
+	    console.log('test');
 	    // flagPosSet = flag;
 	    // setArrowMode = mode;
 	  };

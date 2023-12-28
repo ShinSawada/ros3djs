@@ -193,6 +193,7 @@ ROS3D.Viewer.prototype.removeObject = function(object_name) {
 };
 
 ROS3D.Viewer.prototype.setPose = function(flag, mode) {
+  console.log('test');
   // flagPosSet = flag;
   // setArrowMode = mode;
 };
