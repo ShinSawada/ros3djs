@@ -55085,9 +55085,12 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
     );
     this.raycaster.setFromCamera(mousePos, this.camera);
     this.raycaster.ray.intersectPlane(this.plane, this.intersectionpoint);
-console.log(mouseRay);
-console.log(this.camera);
-	console.log(findClosestPoint(this.camera,mouseRay))
+
+    console.log(mouseRay);
+    
+    console.log(this.camera);
+    console.log(this.camera.position);
+    console.log(findClosestPoint(this.camera.position, mouseRay));
     let arrow_old;
     if (flagPosSet && this.dragging) {
       for (let i = 0; i < this.rootObject.children.length; i++) {
