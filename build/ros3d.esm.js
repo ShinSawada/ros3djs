@@ -55091,6 +55091,33 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
     console.log(this.camera);
     console.log(this.camera.position);
     console.log(findClosestPoint(this.camera.position, mouseRay));
+
+    const dir = new THREE.Vector3(
+      this.intersectionpoint.x - this.start_pos.x,
+      this.intersectionpoint.y - this.start_pos.y,
+      0
+    );
+    dir.normalize();
+    let pos = findClosestPoint(this.camera.position, mouseRay)
+    const origin = new THREE.Vector3(
+      pos.x,
+      pos.y,
+      pos.z
+    );
+    const length = 1.5;
+    let hex = 0x00ff00;
+    const headWidth = 0.5;
+    const arrowHelper = new THREE.ArrowHelper(
+      dir,
+      origin,
+      length,
+      hex,
+      headWidth
+    );
+    arrowHelper.name = "pose_arrow";
+    arrowHelper.line.material.linewidth = 5.0;
+    this.rootObject.add(arrowHelper);
+
     let arrow_old;
     if (flagPosSet && this.dragging) {
       for (let i = 0; i < this.rootObject.children.length; i++) {
