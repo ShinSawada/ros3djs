@@ -56137,7 +56137,7 @@ Viewer.prototype.addObject = function addObject(object, selectable) {
   }
 };
 
-Viewer.prototype.addObject = function removeObject(object_name) {
+Viewer.prototype.removeObject = function removeObject(object_name) {
   for (let i = 0; i < this.scene.children.length; i++) {
     if (this.scene.children[i].geometry?.name == object_name) {
       this.scene.remove(this.scene.children[i]);
@@ -56145,7 +56145,7 @@ Viewer.prototype.addObject = function removeObject(object_name) {
   }
 };
 
-Viewer.prototype.addObject = function setPose(flag, mode) {
+Viewer.prototype.setPose = function setPose(flag, mode) {
   flagPosSet = flag;
   setArrowMode = mode;
 };
