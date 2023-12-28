@@ -55090,7 +55090,9 @@ var MouseHandler = /*@__PURE__*/ (function (superclass) {
     
     console.log(this.camera);
     console.log(this.camera.position);
-    console.log(findClosestPoint(this.camera.position, mouseRay));
+    var ray = new THREE.Raycaster();
+    ray.origin =this.camera.position
+    console.log(findClosestPoint(ray, mouseRay));
 
     const dir = new THREE.Vector3(
       this.intersectionpoint.x - this.start_pos.x,
